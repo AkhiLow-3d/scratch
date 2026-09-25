@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>成功確率計算機</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 40px 16px;
+      background: #f4f6f8;
+      color: #222;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        "Noto Sans JP",
+        sans-serif;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 650px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .description {
+      margin-bottom: 28px;
+      text-align: center;
+      color: #666;
+      font-size: 14px;
+    }
+
+    .card {
+      padding: 28px;
+      border-radius: 16px;
+      background: white;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .input-row {
+      display: grid;
+      grid-template-columns: 1fr 150px 40px;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      font-size: 16px;
+    }
+
+    input:focus,
+    select:focus {
+      outline: 2px solid #4c8bf5;
+      border-color: transparent;
+    }
+
+    .condition-row {
+      display: grid;
+      grid-template-columns: 1fr 150px;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .result {
+      margin-top: 28px;
+      padding: 26px 15px;
+      border-radius: 12px;
+      background: #f1f6ff;
+      text-align: center;
+    }
+
+    .result-label {
+      margin-bottom: 6px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .result-value {
+      color: #1769e0;
+      font-size: 42px;
+      font-weight: 700;
+    }
+
+    .result-text {
+      margin-top: 8px;
+      color: #555;
+      font-size: 14px;
+    }
+
+    .distribution {
+      margin-top: 30px;
+    }
+
+    .distribution h2 {
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .probability-row {
+      display: grid;
+      grid-template-columns: 80px 1fr 90px;
+      gap: 10px;
+      align-items: center;
+      padding: 7px 0;
+    }
+
+    .bar-background {
+      height: 12px;
+      overflow: hidden;
+      border-radius: 10px;
+      background: #e7e7e7;
+    }
+
+    .bar {
+      height: 100%;
+      border-radius: 10px;
+      background: #4c8bf5;
+    }
+
+    .probability {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .error {
+      margin-top: 15px;
+      color: #d22;
+      text-align: center;
+    }
+
+    @media (max-width: 500px) {
+      .input-row {
+        grid-template-columns: 1fr 100px 30px;
+      }
+
+      .condition-row {
+        grid-template-columns: 1fr 120px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .result-value {
+        font-size: 36px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>成功確率計算機</h1>
+
+  <div class="description">
+    N%の確率で成功する試行をX回行った場合の確率を計算します
+  </div>
+
+  <div class="card">
+
+    <div class="input-row">
+      <label for="successRate">1回の成功率</label>
+      <input
+        id="successRate"
+        type="number"
+        value="30"
+        min="0"
+        max="100"
+        step="0.1"
+      >
+      <span>%</span>
+    </div>
+
+    <div class="input-row">
+      <label for="trials">試行回数</label>
+      <input
+        id="trials"
+        type="number"
+        value="10"
+        min="1"
+        max="1000"
+        step="1"
+      >
+      <span>回</span>
+    </div>
+
+    <div class="input-row">
+      <label for="successes">成功回数</label>
+      <input
+        id="successes"
+        type="number"
+        value="3"
+        min="0"
+        step="1"
+      >
+      <span>回</span>
+    </div>
+
+    <div class="condition-row">
+      <label for="condition">条件</label>
+
+      <select id="condition">
+        <option value="atLeast">以上</option>
+        <option value="exact">ちょうど</option>
+        <option value="atMost">以下</option>
+      </select>
+    </div>
+
+    <div id="error" class="error"></div>
+
+    <div class="result">
+
+      <div class="result-label">
+        確率
+      </div>
+
+      <div
+        id="resultValue"
+        class="result-value"
+      >
+        -
+      </div>
+
+      <div
+        id="resultText"
+        class="result-text"
+      ></div>
+
+    </div>
+
+    <div class="distribution">
+
+      <h2>成功回数ごとの確率</h2>
+
+      <div id="distributionList"></div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+const successRateInput =
+  document.getElementById("successRate");
+
+const trialsInput =
+  document.getElementById("trials");
+
+const successesInput =
+  document.getElementById("successes");
+
+const conditionInput =
+  document.getElementById("condition");
+
+const resultValue =
+  document.getElementById("resultValue");
+
+const resultText =
+  document.getElementById("resultText");
+
+const distributionList =
+  document.getElementById("distributionList");
+
+const errorElement =
+  document.getElementById("error");
+
+
+/*
+  二項係数
+  nCk
+*/
+function combination(n, k) {
+
+  if (k < 0 || k > n)
+    return 0;
+
+  if (k === 0 || k === n)
+    return 1;
+
+  k = Math.min(k, n - k);
+
+  let result = 1;
+
+  for (let i = 1; i <= k; i++) {
+
+    result *= (n - k + i) / i;
+
+  }
+
+  return result;
+}
+
+
+/*
+  二項分布
+
+  n = 試行回数
+  k = 成功回数
+  p = 成功確率
+*/
+function binomialProbability(n, k, p) {
+
+  return (
+    combination(n, k) *
+    Math.pow(p, k) *
+    Math.pow(1 - p, n - k)
+  );
+
+}
+
+
+/*
+  表示用
+*/
+function formatPercent(value) {
+
+  const percent = value * 100;
+
+  if (percent === 0)
+    return "0%";
+
+  if (percent < 0.0001)
+    return percent.toExponential(3) + "%";
+
+  if (percent > 99.9999 && percent < 100)
+    return percent.toFixed(6) + "%";
+
+  return percent.toFixed(4) + "%";
+
+}
+
+
+/*
+  メイン計算
+*/
+function calculate() {
+
+  const rate =
+    parseFloat(successRateInput.value);
+
+  const trials =
+    parseInt(trialsInput.value);
+
+  const successes =
+    parseInt(successesInput.value);
+
+  const condition =
+    conditionInput.value;
+
+
+  errorElement.textContent = "";
+
+
+  /*
+    入力チェック
+  */
+
+  if (
+    isNaN(rate) ||
+    rate < 0 ||
+    rate > 100
+  ) {
+
+    showError(
+      "成功率は0〜100%で入力してください"
+    );
+
+    return;
+  }
+
+
+  if (
+    isNaN(trials) ||
+    trials < 1
+  ) {
+
+    showError(
+      "試行回数は1以上で入力してください"
+    );
+
+    return;
+  }
+
+
+  if (
+    isNaN(successes) ||
+    successes < 0 ||
+    successes > trials
+  ) {
+
+    showError(
+      "成功回数は0〜試行回数の範囲で入力してください"
+    );
+
+    return;
+  }
+
+
+  const p =
+    rate / 100;
+
+
+  /*
+    各成功回数の確率を計算
+  */
+
+  const probabilities = [];
+
+  for (
+    let k = 0;
+    k <= trials;
+    k++
+  ) {
+
+    probabilities[k] =
+      binomialProbability(
+        trials,
+        k,
+        p
+      );
+
+  }
+
+
+  /*
+    条件に応じて合計
+  */
+
+  let probability = 0;
+
+  let conditionText = "";
+
+
+  if (condition === "atLeast") {
+
+    for (
+      let k = successes;
+      k <= trials;
+      k++
+    ) {
+
+      probability +=
+        probabilities[k];
+
+    }
+
+    conditionText =
+      `${successes}回以上`;
+
+  }
+
+
+  else if (condition === "exact") {
+
+    probability =
+      probabilities[successes];
+
+    conditionText =
+      `ちょうど${successes}回`;
+
+  }
+
+
+  else if (condition === "atMost") {
+
+    for (
+      let k = 0;
+      k <= successes;
+      k++
+    ) {
+
+      probability +=
+        probabilities[k];
+
+    }
+
+    conditionText =
+      `${successes}回以下`;
+
+  }
+
+
+  /*
+    結果表示
+  */
+
+  resultValue.textContent =
+    formatPercent(probability);
+
+  resultText.textContent =
+    `${trials}回の試行で${conditionText}成功する確率`;
+
+
+  /*
+    分布表示
+  */
+
+  renderDistribution(
+    probabilities
+  );
+
+}
+
+
+/*
+  成功回数ごとの一覧
+*/
+function renderDistribution(
+  probabilities
+) {
+
+  distributionList.innerHTML = "";
+
+  const maxProbability =
+    Math.max(...probabilities);
+
+
+  probabilities.forEach(
+    (probability, k) => {
+
+      const row =
+        document.createElement("div");
+
+      row.className =
+        "probability-row";
+
+
+      const label =
+        document.createElement("div");
+
+      label.textContent =
+        `${k}回`;
+
+
+      const barBackground =
+        document.createElement("div");
+
+      barBackground.className =
+        "bar-background";
+
+
+      const bar =
+        document.createElement("div");
+
+      bar.className =
+        "bar";
+
+
+      /*
+        最大値を100%として
+        グラフ幅を決定
+      */
+
+      const width =
+        maxProbability === 0
+          ? 0
+          : (
+              probability /
+              maxProbability
+            ) * 100;
+
+
+      bar.style.width =
+        width + "%";
+
+
+      barBackground.appendChild(
+        bar
+      );
+
+
+      const value =
+        document.createElement("div");
+
+      value.className =
+        "probability";
+
+      value.textContent =
+        formatPercent(
+          probability
+        );
+
+
+      row.appendChild(label);
+
+      row.appendChild(
+        barBackground
+      );
+
+      row.appendChild(value);
+
+
+      distributionList.appendChild(
+        row
+      );
+
+    }
+  );
+
+}
+
+
+function showError(message) {
+
+  errorElement.textContent =
+    message;
+
+  resultValue.textContent =
+    "-";
+
+  resultText.textContent =
+    "";
+
+  distributionList.innerHTML =
+    "";
+
+}
+
+
+/*
+  入力変更時に即計算
+*/
+
+successRateInput.addEventListener(
+  "input",
+  calculate
+);
+
+trialsInput.addEventListener(
+  "input",
+  calculate
+);
+
+successesInput.addEventListener(
+  "input",
+  calculate
+);
+
+conditionInput.addEventListener(
+  "change",
+  calculate
+);
+
+
+/*
+  初回計算
+*/
+
+calculate();
+
+</script>
+
+</body>
+</html>
